@@ -1,6 +1,6 @@
 # 🛡️ BlackBoxPy - Python Obfuscator
 
-BlackBoxPy is a simple-to-use and powerful Python obfuscation tool built to help you protect your source code from reverse engineering. BlackBoxPy turns securing your code and turning it into an excutable file into an easy task with just a few clicks.
+BlackBoxPy is a simple-to-use and powerful Python obfuscation tool built to help you protect your source code from reverse engineeringsimple-to-use and allows you to secure your code and turn it into an executable file with just a few clicks.
 
 ---
 
