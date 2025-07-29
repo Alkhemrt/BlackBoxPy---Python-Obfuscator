@@ -1,13 +1,36 @@
 import os
 import ast
-import astor
 import random
 import string
 import builtins
 import subprocess
+import sys
+import importlib.util
+import pkg_resources
 
 BUILTINS = set(dir(builtins))
 RESERVED = {"self", "cls", "__init__", "__name__", "__file__", "__main__"}
+
+def check_package_installed(package_name):
+    """Check if package is installed using both importlib and pkg_resources"""
+    try:
+        spec = importlib.util.find_spec(package_name)
+        pkg_resources.get_distribution(package_name)
+        return spec is not None
+    except (ImportError, pkg_resources.DistributionNotFound):
+        return False
+
+def check_astor_installed():
+    if not check_package_installed('astor'):
+        raise ImportError("astor package is required but not installed. Please install it first.")
+
+def check_pyinstaller_installed():
+    if not check_package_installed('pyinstaller'):
+        raise ImportError("PyInstaller is required but not installed. Please install it first.")
+
+def check_pyarmor_installed():
+    if not check_package_installed('pyarmor'):
+        raise ImportError("PyArmor is required but not installed. Please install it first.")
 
 class SafeObfuscator(ast.NodeTransformer):
     def __init__(self):
@@ -70,6 +93,9 @@ class SafeObfuscator(ast.NodeTransformer):
 
 
 def strip_comments_and_docstrings(source):
+    check_astor_installed()
+    import astor
+    
     tree = ast.parse(source)
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module)):
@@ -81,6 +107,9 @@ def strip_comments_and_docstrings(source):
 
 
 def obfuscate_file(src_path, output_dir):
+    check_astor_installed()
+    import astor
+    
     with open(src_path, 'r', encoding='utf-8') as f:
         source = f.read()
 
@@ -116,6 +145,8 @@ def obfuscate_directory(path, output_dir):
 
 
 def run_pyarmor_encrypt(input_path, output_path, logger=print):
+    check_pyarmor_installed()
+    
     input_path = os.path.abspath(input_path)
     output_path = os.path.abspath(output_path)
 
@@ -146,6 +177,8 @@ def run_pyarmor_encrypt(input_path, output_path, logger=print):
 
 
 def run_pyinstaller(input_path, output_dir, icon_path=None, cleanup=False, logger=print):
+    check_pyinstaller_installed()
+    
     input_path = os.path.abspath(input_path)
     output_dir = os.path.abspath(output_dir)
 
