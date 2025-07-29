@@ -2,6 +2,10 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 import os
 import threading
+import sys
+import subprocess
+import importlib.util
+import pkg_resources
 
 from core.obfuscator import (
     run_pyarmor_encrypt,
@@ -9,6 +13,70 @@ from core.obfuscator import (
     obfuscate_directory,
     run_pyinstaller
 )
+
+def check_and_install_dependencies():
+    required_packages = {
+        'pyarmor': 'pyarmor',
+        'pyinstaller': 'pyinstaller',
+        'astor': 'astor',
+    }
+    
+    missing_packages = []
+    total_size = 0
+    
+    # Check which packages are missing using both methods
+    for name, package in required_packages.items():
+        spec = importlib.util.find_spec(name)
+        try:
+            pkg_resources.get_distribution(name)
+        except pkg_resources.DistributionNotFound:
+            spec = None
+        
+        if not spec:
+            missing_packages.append(package)
+    
+    if not missing_packages:
+        return True
+    
+    # Estimate download size (approximate sizes in KB)
+    size_estimates = {
+        'pyarmor': 5000,
+        'pyinstaller': 15000,
+        'astor': 100,
+    }
+    
+    total_size = sum(size_estimates.get(pkg, 1000) for pkg in missing_packages)
+    
+    # Ask user for permission to install
+    root = tk.Tk()
+    root.withdraw()
+    
+    response = messagebox.askyesno(
+        "Missing Dependencies",
+        f"The following packages are required but not installed:\n\n"
+        f"{', '.join(missing_packages)}\n\n"
+        f"Total download size: ~{total_size/1024:.1f} MB\n\n"
+        "Would you like to install them now?",
+        parent=root
+    )
+    root.destroy()
+    
+    if not response:
+        return False
+    
+    # Install missing packages
+    for package in missing_packages:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        except subprocess.CalledProcessError as e:
+            messagebox.showerror(
+                "Installation Failed",
+                f"Failed to install {package}. Please install it manually.\n\n"
+                f"Error: {str(e)}"
+            )
+            return False
+    
+    return True
 
 class BlackBoxPyGUI:
     def __init__(self, root):
@@ -199,7 +267,9 @@ class BlackBoxPyGUI:
         self.log_area.see(tk.END)
 
 if __name__ == "__main__":
+    if not check_and_install_dependencies():
+        sys.exit(1)
+    
     root = tk.Tk()
     app = BlackBoxPyGUI(root)
     root.mainloop()
-
